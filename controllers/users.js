@@ -16,36 +16,43 @@ const jwt = require('jsonwebtoken');
  * provided, it returns a JSON response with a message asking the user to fill out the required fields.
  */
 const login = async (req, res) => {
-  const { email, password } = req.body;
+  try {
+    const { email, password } = req.body;
 
-  if (!email || !password) {
-    return res.status(400).json({
-      message: 'Please, fill out required fields!',
+    if (!email || !password) {
+      return res.status(400).json({
+        message: 'Please, fill out required fields!',
+      });
+    }
+
+    const user = await prisma.user.findFirst({
+      where: { email },
     });
-  }
 
-  const user = await prisma.user.findFirst({
-    where: { email },
-  });
+    const isPasswordCorrect =
+      user &&
+      (await bcrypt.compare(password, user.password));
 
-  const isPasswordCorrect =
-    user && (await bcrypt.compare(password, user.password));
+    const secret = process.env.JWT_SECRET;
 
-  const secret = process.env.JWT_SECRET;
-
-  if (user && isPasswordCorrect && secret) {
-    res.status(200).json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      token: jwt.sign({ id: user.id }, secret, {
-        expiresIn: '15d',
-      }),
-    });
-  } else {
-    return res
+    if (user && isPasswordCorrect && secret) {
+      res.status(200).json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        token: jwt.sign({ id: user.id }, secret, {
+          expiresIn: '15d',
+        }),
+      });
+    } else {
+      return res
+        .status(400)
+        .json({ message: 'Incorrect email or password' });
+    }
+  } catch (error) {
+    res
       .status(400)
-      .json({ message: 'Incorrect email or password' });
+      .json({ message: 'Something went wrong...' });
   }
 };
 
@@ -62,50 +69,56 @@ const login = async (req, res) => {
  * a JSON response with an error message.
  */
 const register = async (req, res) => {
-  const { email, password, name } = req.body;
+  try {
+    const { email, password, name } = req.body;
 
-  if (!email || !password || !name) {
-    return res.status(400).json({
-      message: 'Please, fill out required fields!',
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        message: 'Please, fill out required fields!',
+      });
+    }
+
+    const registeredUser = await prisma.user.findFirst({
+      where: { email },
     });
-  }
 
-  const registeredUser = await prisma.user.findFirst({
-    where: { email },
-  });
+    if (registeredUser) {
+      return res.status(400).json({
+        message: 'User already exist!',
+      });
+    }
 
-  if (registeredUser) {
-    return res.status(400).json({
-      message: 'User already exist!',
+    const salt = await bcrypt.genSalt(10);
+    const hashedPass = await bcrypt.hash(password, salt);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        name,
+        password: hashedPass,
+      },
     });
-  }
 
-  const salt = await bcrypt.genSalt(10);
-  const hashedPass = await bcrypt.hash(password, salt);
+    const secret = process.env.JWT_SECRET;
 
-  const user = await prisma.user.create({
-    data: {
-      email,
-      name,
-      password: hashedPass,
-    },
-  });
-
-  const secret = process.env.JWT_SECRET;
-
-  if (user && secret) {
-    res.status(201).json({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-      token: jwt.sign({ id: user.id }, secret, {
-        expiresIn: '15d',
-      }),
-    });
-  } else {
-    return res
+    if (user && secret) {
+      res.status(201).json({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        token: jwt.sign({ id: user.id }, secret, {
+          expiresIn: '15d',
+        }),
+      });
+    } else {
+      return res
+        .status(400)
+        .json({ message: "Can't register user" });
+    }
+  } catch (error) {
+    res
       .status(400)
-      .json({ message: "Can't register user" });
+      .json({ message: 'Something went wrong...' });
   }
 };
 
