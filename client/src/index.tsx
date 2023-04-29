@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
+import { ConfigProvider, theme } from 'antd';
 import {
   RouterProvider,
   createBrowserRouter,
@@ -9,10 +10,13 @@ import { store } from './app/store';
 import reportWebVitals from './reportWebVitals';
 import './index.css';
 import { Paths } from './paths';
+import { Login } from './pages/login';
+import { Register } from './pages/register';
 
 const router = createBrowserRouter([
-  { path: Paths.login, element: <h1>Login</h1> },
-  { path: Paths.register, element: <h1>Register</h1> },
+  { path: Paths.home, element: <h1>Employees</h1> },
+  { path: Paths.login, element: <Login /> },
+  { path: Paths.register, element: <Register /> },
 ]);
 
 const container = document.getElementById('root')!;
@@ -21,7 +25,10 @@ const root = createRoot(container);
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <RouterProvider router={router} />
+      <ConfigProvider
+        theme={{ algorithm: theme.darkAlgorithm }}>
+        <RouterProvider router={router} />
+      </ConfigProvider>
     </Provider>
   </React.StrictMode>,
 );
