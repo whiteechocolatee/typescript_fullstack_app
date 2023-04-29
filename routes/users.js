@@ -8,12 +8,11 @@ const { auth } = require('../middleware/auth');
 const router = express.Router();
 
 // login
-router.post('/login', login);
-
-// register
-router.post('/register', register);
-
-// current
-router.get('/current', auth, current);
+router
+  .post('/login', login)
+  // register
+  .post('/register', register)
+  // current
+  .get('/current', auth, current);
 
 module.exports = router;
