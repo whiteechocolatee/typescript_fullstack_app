@@ -109,8 +109,20 @@ const register = async (req, res) => {
   }
 };
 
+/**
+ * This function returns the current user as a JSON object with a 200 status code.
+ * @param req - req stands for "request" and it is an object that represents the HTTP request made by
+ * the client to the server. It contains information about the request such as the URL, headers,
+ * parameters, and body.
+ * @param res - `res` stands for response and it is an object that represents the HTTP response that an
+ * Express app sends when it receives an HTTP request. It contains methods and properties that allow
+ * the app to send data back to the client, such as the status code, headers, and the response body. In
+ * the
+ * @returns The `current` function is returning a JSON response with a status code of 200 and the
+ * `req.user` object as the response body.
+ */
 const current = async (req, res) => {
-  res.send('current');
+  return res.status(200).json(req.user);
 };
 
 module.exports = { login, register, current };
